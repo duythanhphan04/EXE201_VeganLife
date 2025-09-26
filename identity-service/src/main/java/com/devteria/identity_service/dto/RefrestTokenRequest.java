@@ -1,0 +1,13 @@
+package com.devteria.identity_service.dto;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class RefrestTokenRequest {
+    String token;
+}
