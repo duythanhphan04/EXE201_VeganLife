@@ -38,8 +38,7 @@ public class User {
     String username;
 
     @Size(max = 255)
-    @NotNull
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", nullable = true)
     String password;
 
     @Size(max = 255)

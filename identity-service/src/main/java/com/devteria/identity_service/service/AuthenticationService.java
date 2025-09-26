@@ -3,12 +3,14 @@ package com.devteria.identity_service.service;
 import com.devteria.identity_service.dto.*;
 import com.devteria.identity_service.entity.InvalidatedToken;
 import com.devteria.identity_service.entity.User;
+import com.devteria.identity_service.enums.Role;
 import com.devteria.identity_service.enums.UserStatus;
 import com.devteria.identity_service.exception.ErrorCode;
 import com.devteria.identity_service.exception.WebException;
 import com.devteria.identity_service.repository.InvalidatedTokenRepository;
-import com.devteria.identity_service.repository.OutBoundIdentityClient;
+import com.devteria.identity_service.repository.httpclient.OutBoundIdentityClient;
 import com.devteria.identity_service.repository.UserRepository;
+import com.devteria.identity_service.repository.httpclient.OutboundUserClient;
 import com.devteria.identity_service.response.AuthenticationResponse;
 import com.devteria.identity_service.response.IntrospectResponse;
 import com.nimbusds.jose.*;
@@ -20,20 +22,17 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.StringJoiner;
 import java.util.UUID;
 
 @Service
@@ -45,6 +44,7 @@ public class AuthenticationService {
     UserRepository userRepository;
     InvalidatedTokenRepository  invalidatedTokenRepository;
     OutBoundIdentityClient outBoundIdentityClient;
+    OutboundUserClient outboundUserClient;
     @NonFinal
     protected static final String SIGNER_KEY = "p7cHINXNIOg7JEYDrVOYKzMREMuZtAtuZzWsz00TyCX+CikSXSjoLImFBx6ZrsJ6";
     @NonFinal
@@ -89,6 +89,16 @@ public class AuthenticationService {
                         .redirectUri(REDIRECT_URL)
                         .grantType(GRANT_TYPE)
                 .build());
+        var userInfo = outboundUserClient.getUserInfo("json", response.getAccessToken());
+        log.info("userInfo: " + userInfo);
+        var user = userRepository.findByUsername(userInfo.getName()).orElseGet(
+                () -> userRepository.save(User.builder()
+                                .username(userInfo.getName())
+                                .email(userInfo.getEmail())
+                                .role(Role.USER)
+                                .status(UserStatus.ACTIVE)
+                                .createdAt(Instant.now())
+                        .build()));
         log.info("TOKEN RESPONSE {}" + response);
         return AuthenticationResponse.builder()
                 .token(response.getAccessToken())

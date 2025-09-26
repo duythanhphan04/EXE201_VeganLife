@@ -1,6 +1,7 @@
 package com.devteria.identity_service.entity;
 
 import com.devteria.identity_service.enums.AppointmentStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -26,6 +27,7 @@ public class Availability {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coachID", nullable = true)
+    @JsonIgnore
     private User coach;
 
     String reason;
