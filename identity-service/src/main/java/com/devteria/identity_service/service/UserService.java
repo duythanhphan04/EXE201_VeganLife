@@ -65,6 +65,10 @@ public class UserService {
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
 
+    public User getUserEntityByID(String id) {
+        return userRepository.findById(id)
+                .orElseThrow(() ->  new WebException(ErrorCode.USER_NOT_FOUND));
+    }
 
     public UserResponse getUserByID(String id) {
         return userMapper.toUserResponse(userRepository.findById(id)

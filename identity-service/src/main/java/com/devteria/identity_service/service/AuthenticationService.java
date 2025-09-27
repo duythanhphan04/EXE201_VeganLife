@@ -99,9 +99,10 @@ public class AuthenticationService {
                                 .status(UserStatus.ACTIVE)
                                 .createdAt(Instant.now())
                         .build()));
+        var token = generateToken(user);
         log.info("TOKEN RESPONSE {}" + response);
         return AuthenticationResponse.builder()
-                .token(response.getAccessToken())
+                .token(token)
                 .authenticated(true)
                 .build();
     }

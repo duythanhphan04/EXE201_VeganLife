@@ -4,6 +4,8 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 identity-service/src/main/resources/application-secret.properties
+identity-service/src/main/resources/credentials.json
+
 ### STS ###
 .apt_generated
 .classpath
