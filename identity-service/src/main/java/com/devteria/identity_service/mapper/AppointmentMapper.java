@@ -10,4 +10,5 @@ public interface AppointmentMapper {
     Appointment toEntity(CreateAppointmentRequest request);
 
     AppointmentResponse toResponse(Appointment appointment);
+
 }
