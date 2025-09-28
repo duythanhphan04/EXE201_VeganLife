@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface AppointmentMapper {
-  Appointment toEntity(CreateAppointmentRequest request);
+    Appointment toEntity(CreateAppointmentRequest request);
 
-  AppointmentResponse toResponse(Appointment appointment);
+    AppointmentResponse toResponse(Appointment appointment);
 }

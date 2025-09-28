@@ -6,5 +6,5 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface AvailabilityMapper {
-  AvailabilityResponse toAvailabilityResponse(Availability availability);
+    AvailabilityResponse toAvailabilityResponse(Availability availability);
 }

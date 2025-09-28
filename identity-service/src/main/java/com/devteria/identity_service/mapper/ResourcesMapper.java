@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface ResourcesMapper {
-  Resources toResources(CreateResourcesRequest resources);
+    Resources toResources(CreateResourcesRequest resources);
 
-  ResourcesResponse toResourcesResponse(Resources resources);
+    ResourcesResponse toResourcesResponse(Resources resources);
 }

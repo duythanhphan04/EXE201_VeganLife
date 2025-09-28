@@ -88,7 +88,6 @@
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-processor</artifactId>
             <version>1.6.0</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- JWT -->
@@ -147,9 +146,12 @@
             <artifactId>google-api-services-calendar</artifactId>
             <version>v3-rev411-1.25.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.39.0</version>
+        </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <!-- Compiler Plugin để xử lý MapStruct -->
