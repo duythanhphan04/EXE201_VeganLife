@@ -9,6 +9,9 @@ import com.devteria.identity_service.repository.AppointmentRepository;
 import com.devteria.identity_service.repository.AvailabilityRepository;
 import com.devteria.identity_service.response.AppointmentResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -27,20 +30,40 @@ public class AppointmentService {
     private final EmailSenderService emailSenderService;
     private final GoogleCalendarService googleCalendarService;
     public AppointmentResponse createAppointment(CreateAppointmentRequest request) throws IOException {
+        // Lấy user đang login trong hệ thống
+        String loginUsername = userService.getLoggedInUsername();
+        User user = userService.getUserEntity(loginUsername);
+        // Tạo lịch hẹn trên Google Calendar và lấy link Google Meet
+        String link = googleCalendarService.createGGMeetAppointment(
+                request,
+                user.getEmail(),
+                request.getGoogleAccessToken() // cần có field googleAccessToken trong request
+        );
+
+        // Tạo entity Appointment
         Appointment appointment = appointmentMapper.toEntity(request);
-        String link =googleCalendarService.createGGMeetAppointment(request);
         appointment.setLink(link);
+
         Instant appointmentDateTime = Instant.parse(request.getAppointmentDateTime());
         appointment.setAppointmentDateTime(appointmentDateTime);
         appointment.setStatus(AppointmentStatus.SCHEDULED);
-        String loginUsername = userService.getLoggedInUsername();
-        User user = userService.getUserEntity(loginUsername);
         appointment.setUser(user);
+
+        // Set coach
         User coach = userService.getUserEntityByID(request.getCoachID());
         String coachUsername = coach.getUsername();
         appointment.setCoach(coach);
+
+        // Lưu DB
         appointmentRepository.save(appointment);
-        availabilityService.confirmConsultantScheduledSlot(coachUsername, appointmentDateTime, AppointmentStatus.CONFIRMED);
+
+        // Xác nhận slot của coach đã được book
+        availabilityService.confirmConsultantScheduledSlot(
+                coachUsername,
+                appointmentDateTime,
+                AppointmentStatus.CONFIRMED
+        );
+
         return appointmentMapper.toResponse(appointment);
     }
 }

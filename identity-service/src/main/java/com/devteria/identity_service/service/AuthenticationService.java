@@ -7,12 +7,14 @@ import com.devteria.identity_service.enums.Role;
 import com.devteria.identity_service.enums.UserStatus;
 import com.devteria.identity_service.exception.ErrorCode;
 import com.devteria.identity_service.exception.WebException;
+import com.devteria.identity_service.mapper.UserMapper;
 import com.devteria.identity_service.repository.InvalidatedTokenRepository;
 import com.devteria.identity_service.repository.httpclient.OutBoundIdentityClient;
 import com.devteria.identity_service.repository.UserRepository;
 import com.devteria.identity_service.repository.httpclient.OutboundUserClient;
 import com.devteria.identity_service.response.AuthenticationResponse;
 import com.devteria.identity_service.response.IntrospectResponse;
+import com.devteria.identity_service.response.UserResponse;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -33,6 +35,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -45,6 +48,7 @@ public class AuthenticationService {
     InvalidatedTokenRepository  invalidatedTokenRepository;
     OutBoundIdentityClient outBoundIdentityClient;
     OutboundUserClient outboundUserClient;
+    UserMapper userMapper;
     @NonFinal
     protected static final String SIGNER_KEY = "p7cHINXNIOg7JEYDrVOYKzMREMuZtAtuZzWsz00TyCX+CikSXSjoLImFBx6ZrsJ6";
     @NonFinal
@@ -176,7 +180,7 @@ public class AuthenticationService {
          return signedJWT;
      }
 
-    private String generateToken(User user) {
+    public String generateToken(User user) {
          JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
          JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                  .subject(user.getUsername())
@@ -206,6 +210,23 @@ public class AuthenticationService {
             return true;
         } catch (WebException | ParseException | JOSEException e) {
             return false;
+        }
+    }
+
+    public User findOrCreateUser(String email, String name) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isPresent()) {
+            return optionalUser.get();
+        } else {
+            User newUser = User.builder()
+                    .username(name)
+                    .email(email)
+                    .role(Role.USER)
+                    .status(UserStatus.ACTIVE)
+                    .createdAt(Instant.now())
+                    .build();
+            userRepository.save(newUser);
+            return newUser;
         }
     }
 }

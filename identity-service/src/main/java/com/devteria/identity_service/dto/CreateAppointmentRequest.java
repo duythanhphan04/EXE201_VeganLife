@@ -15,4 +15,5 @@ public class CreateAppointmentRequest {
     String appointmentDateTime;
     @NotNull(message = "Coach ID (username) is required")
     String coachID;
+    String googleAccessToken;
 }

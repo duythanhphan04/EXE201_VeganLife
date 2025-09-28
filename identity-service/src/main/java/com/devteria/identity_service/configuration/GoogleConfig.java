@@ -29,7 +29,7 @@ public class GoogleConfig {
     @Value("8889")
     private int redirectPort;
     private static final List<String> SCOPES = List.of(
-            "https://www.googleapis.com/auth/calendar.events"
+            "https://www.googleapis.com/auth/calendar"
     );
     @Bean
     public JsonFactory googleJsonFactory() {
