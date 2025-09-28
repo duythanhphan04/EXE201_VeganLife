@@ -1,4 +1,5 @@
 package com.devteria.identity_service.response;
+
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,12 +11,12 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonNaming(com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class OutBoundUserResponse {
-    String id;
-    String email;
-    Boolean verified_email;
-    String name;
-    String given_name;
-    String family_name;
-    String picture;
-    String locale;
+  String id;
+  String email;
+  Boolean verified_email;
+  String name;
+  String given_name;
+  String family_name;
+  String picture;
+  String locale;
 }

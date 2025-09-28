@@ -6,8 +6,8 @@ import com.devteria.identity_service.response.AppointmentResponse;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
-
 public interface AppointmentMapper {
-    Appointment toEntity(CreateAppointmentRequest request);
-    AppointmentResponse toResponse(Appointment appointment);
+  Appointment toEntity(CreateAppointmentRequest request);
+
+  AppointmentResponse toResponse(Appointment appointment);
 }

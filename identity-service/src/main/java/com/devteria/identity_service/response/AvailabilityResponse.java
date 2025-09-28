@@ -1,10 +1,9 @@
 package com.devteria.identity_service.response;
 
 import com.devteria.identity_service.enums.AppointmentStatus;
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -12,9 +11,9 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AvailabilityResponse {
-    String availabilityID;
-    AppointmentStatus status;
-    List<String> appointmentDateTime;
-    String createdAt;
-    UserResponse coach;
+  String availabilityID;
+  AppointmentStatus status;
+  List<String> appointmentDateTime;
+  String createdAt;
+  UserResponse coach;
 }

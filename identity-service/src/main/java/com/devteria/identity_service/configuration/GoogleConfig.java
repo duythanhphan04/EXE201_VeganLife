@@ -10,48 +10,53 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class GoogleConfig {
-    @Value("${google.api.tokens-directory-path:tokens}")
-    private String tokensDirectoryPath;
-    @Value("${google.api.credentials-file-path:/credentials.json}")
-    private String credentialsFilePath;
-    @Value("8889")
-    private int redirectPort;
-    private static final List<String> SCOPES = List.of(
-            "https://www.googleapis.com/auth/calendar"
-    );
-    @Bean
-    public JsonFactory googleJsonFactory() {
-        return GsonFactory.getDefaultInstance();
+  @Value("${google.api.tokens-directory-path:tokens}")
+  private String tokensDirectoryPath;
+
+  @Value("${google.api.credentials-file-path:/credentials.json}")
+  private String credentialsFilePath;
+
+  @Value("8889")
+  private int redirectPort;
+
+  private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/calendar");
+
+  @Bean
+  public JsonFactory googleJsonFactory() {
+    return GsonFactory.getDefaultInstance();
+  }
+
+  @Bean
+  public NetHttpTransport googleHttpTransport() throws GeneralSecurityException, IOException {
+    return GoogleNetHttpTransport.newTrustedTransport();
+  }
+
+  @Bean
+  public Credential googleCredential(NetHttpTransport httpTransport, JsonFactory jsonFactory)
+      throws IOException, GeneralSecurityException {
+    InputStream in = getClass().getResourceAsStream(credentialsFilePath);
+    if (in == null) {
+      throw new IOException("Resource not found: " + credentialsFilePath);
     }
-    @Bean
-    public NetHttpTransport googleHttpTransport() throws GeneralSecurityException, IOException {
-        return GoogleNetHttpTransport.newTrustedTransport();
-    }
-    @Bean
-    public Credential googleCredential(NetHttpTransport httpTransport, JsonFactory jsonFactory) throws IOException, GeneralSecurityException {
-        InputStream in = getClass().getResourceAsStream(credentialsFilePath);
-        if (in == null) {
-            throw new IOException("Resource not found: " + credentialsFilePath);
-        }
-        GoogleClientSecrets clientSecrets =
-                GoogleClientSecrets.load(jsonFactory, new java.io.InputStreamReader(in));
-        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                httpTransport, jsonFactory, clientSecrets, SCOPES)
-                .setDataStoreFactory(new FileDataStoreFactory(new File(tokensDirectoryPath)))
-                .setAccessType("offline").build();
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(redirectPort).build();
-        return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
-    }
+    GoogleClientSecrets clientSecrets =
+        GoogleClientSecrets.load(jsonFactory, new java.io.InputStreamReader(in));
+    GoogleAuthorizationCodeFlow flow =
+        new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets, SCOPES)
+            .setDataStoreFactory(new FileDataStoreFactory(new File(tokensDirectoryPath)))
+            .setAccessType("offline")
+            .build();
+    LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(redirectPort).build();
+    return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+  }
 }

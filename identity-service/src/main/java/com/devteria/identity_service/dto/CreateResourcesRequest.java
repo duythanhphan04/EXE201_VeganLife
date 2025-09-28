@@ -3,8 +3,6 @@ package com.devteria.identity_service.dto;
 import com.devteria.identity_service.enums.ResourcesStatus;
 import com.devteria.identity_service.enums.ResourcesType;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -14,13 +12,17 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateResourcesRequest {
-    @NotBlank(message = "Resource name is required")
-    String resourcesName;
-    String img;
-    @NotBlank(message = "Description is required")
-    String description;
-    @NotBlank(message = "Content is required")
-    String content;
-    ResourcesType resourcesType;
-    ResourcesStatus  resourcesStatus;
+  @NotBlank(message = "Resource name is required")
+  String resourcesName;
+
+  String img;
+
+  @NotBlank(message = "Description is required")
+  String description;
+
+  @NotBlank(message = "Content is required")
+  String content;
+
+  ResourcesType resourcesType;
+  ResourcesStatus resourcesStatus;
 }

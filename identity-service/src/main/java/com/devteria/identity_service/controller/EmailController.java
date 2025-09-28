@@ -22,26 +22,25 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EmailController {
-    @Autowired
-    EmailSenderService emailSenderService;
-    @PostMapping("/sendToEmail/{email}/subject/{subject}/body/{body}")
-    @Operation(summary = "Send email to user")
-    public ApiResponse<EmailResponse> sendEmail(@PathVariable String email , @PathVariable String subject, @PathVariable String body) throws MessagingException {
-        MailBody mailBody = MailBody.builder()
-                .to(new String[]{email})
-                .subject(subject)
-                .body(body)
-                .build();
-        emailSenderService.sendEmail(mailBody);
-        EmailResponse emailResponse = new EmailResponse();
-        emailResponse.setToEmail(email);
-        emailResponse.setSubject(subject);
-        emailResponse.setBody(body);
-        emailResponse.setSent(true);
-        return ApiResponse.<EmailResponse>builder()
-                .code(1000)
-                .message("Email sent successfully")
-                .data(emailResponse)
-                .build();
-    }
+  @Autowired EmailSenderService emailSenderService;
+
+  @PostMapping("/sendToEmail/{email}/subject/{subject}/body/{body}")
+  @Operation(summary = "Send email to user")
+  public ApiResponse<EmailResponse> sendEmail(
+      @PathVariable String email, @PathVariable String subject, @PathVariable String body)
+      throws MessagingException {
+    MailBody mailBody =
+        MailBody.builder().to(new String[] {email}).subject(subject).body(body).build();
+    emailSenderService.sendEmail(mailBody);
+    EmailResponse emailResponse = new EmailResponse();
+    emailResponse.setToEmail(email);
+    emailResponse.setSubject(subject);
+    emailResponse.setBody(body);
+    emailResponse.setSent(true);
+    return ApiResponse.<EmailResponse>builder()
+        .code(1000)
+        .message("Email sent successfully")
+        .data(emailResponse)
+        .build();
+  }
 }

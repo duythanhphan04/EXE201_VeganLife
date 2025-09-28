@@ -1,9 +1,6 @@
-package com.devteria.identity_service.dto;
+package com.devteria.identity_service.controller;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,8 +9,10 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateAvailabilityRequest {
+public class UpdateAvailabilityRequest {
   @NotNull(message = "Availability date and time is required")
-  @Valid
-  List<@NotBlank String> availabilityDatetime;
+  String availabilityDateTime;
+
+  @NotNull(message = "Reason is required")
+  String reason;
 }

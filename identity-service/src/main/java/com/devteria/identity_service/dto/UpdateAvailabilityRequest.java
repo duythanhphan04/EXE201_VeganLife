@@ -10,8 +10,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateAvailabilityRequest {
-    @NotNull(message = "Availability date and time is required")
-    String availabilityDateTime;
-    @NotNull(message = "Reason is required")
-    String reason;
+  @NotNull(message = "Availability date and time is required")
+  String availabilityDateTime;
+
+  @NotNull(message = "Reason is required")
+  String reason;
 }

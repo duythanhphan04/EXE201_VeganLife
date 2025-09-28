@@ -3,13 +3,9 @@ package com.devteria.identity_service.entity;
 import com.devteria.identity_service.enums.AppointmentStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
+import java.time.Instant;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-import java.time.Instant;
 
 @Entity
 @Setter
@@ -20,29 +16,30 @@ import java.time.Instant;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "Availability")
 public class Availability {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "AvailabilityID", nullable = false)
-    private String availabilityID;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "AvailabilityID", nullable = false)
+  private String availabilityID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "coachID", nullable = true)
-    @JsonIgnore
-    private User coach;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "coachID", nullable = true)
+  @JsonIgnore
+  private User coach;
 
-    String reason;
+  String reason;
 
-    @Column(name = "availability_datetime")
-    private Instant availabilityDatetime;
+  @Column(name = "availability_datetime")
+  private Instant availabilityDatetime;
 
-    @Column(name = "created_at")
-    private Instant createdAt;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private AppointmentStatus status;
+  @Column(name = "created_at")
+  private Instant createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = Instant.now();
-    }
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status")
+  private AppointmentStatus status;
+
+  @PrePersist
+  protected void onCreate() {
+    this.createdAt = Instant.now();
+  }
 }

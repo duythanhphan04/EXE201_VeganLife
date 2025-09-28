@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-
-import java.time.LocalDate;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,16 +13,15 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
-    @Size(max = 255, message = "Email must be less than 256 characters")
-    String email;
+  @NotBlank(message = "Email is required")
+  @Email(message = "Invalid email format")
+  @Size(max = 255, message = "Email must be less than 256 characters")
+  String email;
 
-    @NotBlank(message = "Full name is required")
-    @Size(max = 255, message = "Full name must be less than 256 characters")
-    String fullName;
+  @NotBlank(message = "Full name is required")
+  @Size(max = 255, message = "Full name must be less than 256 characters")
+  String fullName;
 
-    @Size(max = 300, message = "Image URL must be less than 256 characters")
-    String img;
-
+  @Size(max = 300, message = "Image URL must be less than 256 characters")
+  String img;
 }

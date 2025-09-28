@@ -10,12 +10,12 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AppointmentResponse {
-    String appointmentID;
-    String notes;
-    String link;
-    AppointmentStatus status;
-    String appointmentDateTime;
-    String createdAt;
-    UserResponse user;
-    UserResponse coach;
+  String appointmentID;
+  String notes;
+  String link;
+  AppointmentStatus status;
+  String appointmentDateTime;
+  String createdAt;
+  UserResponse user;
+  UserResponse coach;
 }

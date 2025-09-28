@@ -11,15 +11,14 @@ import lombok.Setter;
 @Entity
 @Table(name = "Personal_Goal")
 public class PersonalGoal {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Size(max = 255)
-    @Column(name = "personal_goalID", nullable = false)
-    private String personalGoalid;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Size(max = 255)
+  @Column(name = "personal_goalID", nullable = false)
+  private String personalGoalid;
 
-    @Size(max = 255)
-    @NotNull
-    @Column(name = "goal_name", nullable = false)
-    private String goalName;
-
+  @Size(max = 255)
+  @NotNull
+  @Column(name = "goal_name", nullable = false)
+  private String goalName;
 }

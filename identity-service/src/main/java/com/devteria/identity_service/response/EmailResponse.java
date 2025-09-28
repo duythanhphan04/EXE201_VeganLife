@@ -9,8 +9,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EmailResponse {
-    String toEmail;
-    String subject;
-    String body;
-    boolean sent;
+  String toEmail;
+  String subject;
+  String body;
+  boolean sent;
 }
