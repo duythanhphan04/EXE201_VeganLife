@@ -180,7 +180,7 @@ public class AppointmentService {
             availabilityService.getCoachAvailabilityEntityByAvailabilityDateTime(
                 appointment.getCoach().getUsername(), appointmentDateTime);
         if (availability != null) {
-          availability.setStatus(AppointmentStatus.CANCELLED);
+          availability.setStatus(AppointmentStatus.AVAILABLE);
           availabilityRepository.save(availability);
           // Gửi email thông báo hủy lịch cho coach
           User user = appointment.getUser();
@@ -207,5 +207,39 @@ public class AppointmentService {
 
   private Appointment getByUser_UsernameAndAppointmentDateTime(String username, Instant time) {
     return appointmentRepository.findByUser_UsernameAndAppointmentDateTime(username, time);
+  }
+
+  public List<AppointmentResponse> getAppointmentsByUserID(String userID) {
+    List<Appointment> appointments =
+        appointmentRepository.findByUser_UserIDOrderByAppointmentDateTimeAsc(userID);
+    return appointments.stream().map(appointmentMapper::toResponse).toList();
+  }
+
+  public List<AppointmentResponse> getAppointmentsByCoachID(String coachID) {
+    List<Appointment> appointments =
+        appointmentRepository.findByCoach_UserIDOrderByAppointmentDateTimeAsc(coachID);
+    return appointments.stream().map(appointmentMapper::toResponse).toList();
+  }
+
+  public List<AppointmentResponse> getTodayAppointmentsByUserID(String userID) {
+    ZoneId zone = ZoneId.systemDefault();
+    Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
+    Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
+    List<Appointment> appointments =
+        appointmentRepository
+            .findByUser_UserIDAndAppointmentDateTimeBetweenOrderByAppointmentDateTimeDesc(
+                userID, startOfDay, endOfDay);
+    return appointments.stream().map(appointmentMapper::toResponse).toList();
+  }
+
+  public List<AppointmentResponse> getTodayAppointmentsByCoachID(String coachID) {
+    ZoneId zone = ZoneId.systemDefault();
+    Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
+    Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
+    List<Appointment> appointments =
+        appointmentRepository
+            .findByCoach_UserIDAndAppointmentDateTimeBetweenOrderByAppointmentDateTimeDesc(
+                coachID, startOfDay, endOfDay);
+    return appointments.stream().map(appointmentMapper::toResponse).toList();
   }
 }

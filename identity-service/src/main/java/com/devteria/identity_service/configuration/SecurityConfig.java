@@ -113,6 +113,9 @@ public class SecurityConfig {
                                       + googleAccessToken
                                       + "\"\n"
                                       + "}");
+                          //                          response.sendRedirect(
+                          //                              "http://localhost:5173/" + appToken + "/"
+                          // + googleAccessToken);
                         }));
     return http.build();
   }
