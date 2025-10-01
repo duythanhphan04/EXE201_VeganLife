@@ -52,7 +52,7 @@ public class AppointmentService {
 
     Instant appointmentDateTime = Instant.parse(request.getAppointmentDateTime());
     appointment.setAppointmentDateTime(appointmentDateTime);
-    appointment.setStatus(AppointmentStatus.SCHEDULED);
+    appointment.setStatus(AppointmentStatus.AVAILABLE);
     appointment.setUser(user);
 
     // Set coach
@@ -65,7 +65,7 @@ public class AppointmentService {
 
     // Xác nhận slot của coach đã được book
     availabilityService.confirmConsultantScheduledSlot(
-        coachUsername, appointmentDateTime, AppointmentStatus.CONFIRMED);
+        coachUsername, appointmentDateTime, AppointmentStatus.UNAVAILABLE);
 
     return appointmentMapper.toResponse(appointment);
   }
@@ -171,8 +171,8 @@ public class AppointmentService {
     Appointment appointment =
         getByUser_UsernameAndAppointmentDateTime(loginUsername, appointmentDateTime);
     if (appointment != null) {
-      if (status.equals(AppointmentStatus.CANCELLED)) {
-        appointment.setStatus(AppointmentStatus.CANCELLED);
+      if (status.equals(AppointmentStatus.AVAILABLE)) {
+        appointment.setStatus(AppointmentStatus.AVAILABLE);
         String reason = request.getNotes();
         appointment.setNotes(reason);
         appointmentRepository.save(appointment);

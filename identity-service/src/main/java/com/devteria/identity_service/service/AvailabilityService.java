@@ -58,7 +58,7 @@ public class AvailabilityService {
                     Availability.builder()
                             .coach(coach)
                             .availabilityDatetime(time)
-                            .status(AppointmentStatus.SCHEDULED)
+                            .status(AppointmentStatus.AVAILABLE)
                             .build();
             newAvailabilitiesToPersist.add(availability);
         }
@@ -70,18 +70,9 @@ public class AvailabilityService {
                 .collect(Collectors.toList());
     }
 
-    public List<LocalDateTime> getCoachBookedSlotsByStatus(
-            String username, String from, String to, AppointmentStatus status) {
-        LocalDate fromDate = LocalDate.parse(from);
-        LocalDate toDate = LocalDate.parse(to);
-        Instant fromInstant = fromDate.atStartOfDay(VIETNAM_ZONE).toInstant();
-        Instant toInstant = toDate.atTime(LocalTime.MAX).atZone(VIETNAM_ZONE).toInstant();
-        List<Availability> scheduledSlots =
-                getByCoachUsernameAndAvailabilityDateTimeBetween(username, fromInstant, toInstant);
-        return scheduledSlots.stream()
-                .filter(slot -> slot.getStatus().equals(status))
-                .map(dateTime -> LocalDateTime.ofInstant(dateTime.getAvailabilityDatetime(), VIETNAM_ZONE))
-                .toList();
+    public List<Availability> getCoachBookedSlotsByStatus(
+            String userID, AppointmentStatus status) {
+        return availabilityRepository.getAvailabilitiesByCoach_UserIDAndStatus(userID, status);
     }
 
     public List<Availability> getByCoachUsernameAndAvailabilityDateTimeBetween(
@@ -96,33 +87,8 @@ public class AvailabilityService {
                 username, availabilityDateTime);
     }
 
-    public List<LocalDateTime> getCoachAvailableSlots(String username, String from, String to) {
-        LocalDate fromLocalDate = LocalDate.parse(from);
-        LocalDate toLocalDate = LocalDate.parse(to);
-        Instant fromInstant = fromLocalDate.atStartOfDay(VIETNAM_ZONE).toInstant();
-        Instant toInstant = toLocalDate.atTime(LocalTime.MAX).atZone(VIETNAM_ZONE).toInstant();
-        List<Availability> unavailableSlots =
-                getByCoachUsernameAndAvailabilityDateTimeBetween(username, fromInstant, toInstant);
-        Set<Instant> unavailableInstantTimes =
-                unavailableSlots.stream()
-                        .map(Availability::getAvailabilityDatetime)
-                        .collect(Collectors.toSet());
-        List<LocalDateTime> availableSlotsLocal = new ArrayList<>();
-        for (LocalDate date = fromLocalDate; !date.isAfter(toLocalDate); date = date.plusDays(1)) {
-            for (int hour = 8; hour < 17; hour++) {
-                if (hour == 12) {
-                    continue;
-                }
-                LocalDateTime slotLocal = LocalDateTime.of(date, LocalTime.of(hour, 0));
-                Instant potentialSlotInstant = slotLocal.atZone(VIETNAM_ZONE).toInstant();
-                if (!unavailableInstantTimes.contains(potentialSlotInstant)) {
-                    if (potentialSlotInstant.isAfter(Instant.now())) {
-                        availableSlotsLocal.add(slotLocal);
-                    }
-                }
-            }
-        }
-        return availableSlotsLocal;
+    public List<Availability> getCoachAvailableSlots(String userID) {
+        return availabilityRepository.findByCoach_UserID(userID);
     }
 
     public void confirmConsultantScheduledSlot(
@@ -141,15 +107,15 @@ public class AvailabilityService {
         Availability availability =
                 getCoachAvailabilityEntityByAvailabilityDateTime(loginCoach, slotCancel);
         if (availability != null) {
-            if (status.equals(AppointmentStatus.CANCELLED)) {
-                availability.setStatus(AppointmentStatus.CANCELLED);
+            if (status.equals(AppointmentStatus.AVAILABLE)) {
+                availability.setStatus(AppointmentStatus.AVAILABLE);
                 String reason = request.getReason();
                 availability.setReason(reason);
                 availabilityRepository.save(availability);
                 Appointment appointment =
                         appointmentRepository.findByCoachUsernameAndAppointmentDateTime(loginCoach, slotCancel);
                 if (appointment != null) {
-                    appointment.setStatus(AppointmentStatus.CANCELLED);
+                    appointment.setStatus(AppointmentStatus.AVAILABLE);
                     appointmentRepository.save(appointment);
                     User user = appointment.getUser();
                     String userEmail = user.getEmail();
@@ -177,49 +143,12 @@ public class AvailabilityService {
         }
     }
 
-    public AvailabilityResponse cancelCoachScheduledSlots(
-            AppointmentStatus status,
-            com.devteria.identity_service.controller.@Valid UpdateAvailabilityRequest request)
-            throws MessagingException {
-        String loginCoach = userService.getLoggedInUsername();
-        Instant slotCancel = Instant.parse(request.getAvailabilityDateTime());
-        Availability availability =
-                getCoachAvailabilityEntityByAvailabilityDateTime(loginCoach, slotCancel);
-        if (availability != null) {
-            if (status.equals(AppointmentStatus.CANCELLED)) {
-                availability.setStatus(AppointmentStatus.CANCELLED);
-                String reason = request.getReason();
-                availability.setReason(reason);
-                availabilityRepository.save(availability);
-                Appointment appointment =
-                        appointmentRepository.findByCoachUsernameAndAppointmentDateTime(loginCoach, slotCancel);
-                if (appointment != null) {
-                    appointment.setStatus(AppointmentStatus.CANCELLED);
-                    appointmentRepository.save(appointment);
-                    // Email sending logic can be added here if needed
-                    User user = appointment.getUser();
-                    String userEmail = user.getEmail();
-                    User coach = appointment.getCoach();
-                    String coachEmail = coach.getEmail();
-                    String[] recipients = {userEmail, coachEmail};
-                    MailBody mailBody =
-                            MailBody.builder()
-                                    .subject("Thông báo hủy lịch hẹn")
-                                    .to(recipients)
-                                    .body(
-                                            "Lịch hẹn vào lúc "
-                                                    + slotCancel.toString()
-                                                    + " đã bị huỷ. Lý do: "
-                                                    + request.getReason())
-                                    .build();
-                    emailSenderService.sendEmail(mailBody);
-                }
-                return availabilityMapper.toAvailabilityResponse(availability);
-            } else {
-                throw new IllegalArgumentException("Invalid status for cancellation");
-            }
-        } else {
-            throw new IllegalArgumentException("No availability found for the given date and time");
+    public Availability deleteAvailability(String coachID, String availabilityID) {
+        Availability availability = availabilityRepository.findById(availabilityID).orElse(null);
+        if (availability == null || !availability.getCoach().getUserID().equals(coachID)) {
+            throw new IllegalArgumentException("Availability not found or coach mismatch");
         }
+        availabilityRepository.delete(availability);
+        return availability;
     }
 }
