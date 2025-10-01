@@ -3,18 +3,16 @@ package com.devteria.identity_service.service;
 import com.devteria.identity_service.dto.CreateAppointmentRequest;
 import com.devteria.identity_service.dto.UpdateAppointmentRequest;
 import com.devteria.identity_service.entity.Appointment;
-import com.devteria.identity_service.entity.Availability;
-import com.devteria.identity_service.entity.MailBody;
+
 import com.devteria.identity_service.entity.User;
 import com.devteria.identity_service.enums.AppointmentStatus;
 import com.devteria.identity_service.mapper.AppointmentMapper;
 import com.devteria.identity_service.repository.AppointmentRepository;
 import com.devteria.identity_service.repository.AvailabilityRepository;
 import com.devteria.identity_service.response.AppointmentResponse;
-import jakarta.mail.MessagingException;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import com.google.api.services.calendar.model.Event;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.*;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +37,7 @@ public class AppointmentService {
     String loginUsername = userService.getLoggedInUsername();
     User user = userService.getUserEntity(loginUsername);
     // Tạo lịch hẹn trên Google Calendar và lấy link Google Meet
-    String link =
+    Event eventGG =
         googleCalendarService.createGGMeetAppointment(
             request,
             user.getEmail(),
@@ -48,8 +46,8 @@ public class AppointmentService {
 
     // Tạo entity Appointment
     Appointment appointment = appointmentMapper.toEntity(request);
-    appointment.setLink(link);
-
+    appointment.setLink(eventGG.getHangoutLink());
+    appointment.setGoogleEventId(eventGG.getId());
     Instant appointmentDateTime = Instant.parse(request.getAppointmentDateTime());
     appointment.setAppointmentDateTime(appointmentDateTime);
     appointment.setStatus(AppointmentStatus.AVAILABLE);
@@ -74,19 +72,6 @@ public class AppointmentService {
     List<Appointment> appointments = appointmentRepository.findAll();
     return appointments.stream().map(appointmentMapper::toResponse).toList();
   }
-
-  public List<AppointmentResponse> getUserAppointments(String username) {
-    List<Appointment> appointments =
-        appointmentRepository.findByUser_UsernameOrderByAppointmentDateTimeAsc(username);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
-  }
-
-  public List<AppointmentResponse> getCoachAppointments(String coachUsername) {
-    List<Appointment> appointments =
-        appointmentRepository.findByCoach_UsernameOrderByAppointmentDateTimeAsc(coachUsername);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
-  }
-
   public Appointment getAppointmentById(String appointmentId) {
     return appointmentRepository
         .findById(appointmentId)
@@ -106,37 +91,6 @@ public class AppointmentService {
     appointment.setStatus(request.getStatus());
     appointmentRepository.save(appointment);
     return appointmentMapper.toResponse(appointment);
-  }
-
-  public List<AppointmentResponse> getUserTodayAppointments(String username) {
-    ZoneId zone = ZoneId.systemDefault();
-    Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
-    Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
-    List<Appointment> appointments =
-        appointmentRepository
-            .findByUser_UsernameAndAppointmentDateTimeBetweenOrderByAppointmentDateTimeDesc(
-                username, startOfDay, endOfDay);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
-  }
-
-  public List<AppointmentResponse> getCoachTodayAppointments(String coachUsername) {
-    ZoneId zone = ZoneId.systemDefault();
-    Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
-    Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
-    List<Appointment> appointments =
-        appointmentRepository
-            .findByCoach_UsernameAndAppointmentDateTimeBetweenOrderByAppointmentDateTimeDesc(
-                coachUsername, startOfDay, endOfDay);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
-  }
-
-  public List<AppointmentResponse> getAllAppointmentsByDateDuration(Instant start, Instant end) {
-    List<Appointment> appointments = appointmentRepository.findByCreatedAtBetween(start, end);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
-  }
-
-  public long countCoachAppointments(String coachUsername) {
-    return appointmentRepository.countByCoach_Username(coachUsername);
   }
 
   private List<Appointment> getByUser_UsernameAndAppointmentDateTimeBetween(
@@ -160,49 +114,6 @@ public class AppointmentService {
             appointment ->
                 LocalDateTime.ofInstant(appointment.getAppointmentDateTime(), VIETNAM_ZONE))
         .toList();
-  }
-
-  @Transactional
-  public AppointmentResponse cancelUserScheduledAppointment(
-      AppointmentStatus status, UpdateAppointmentRequest request)
-      throws IOException, MessagingException {
-    String loginUsername = userService.getLoggedInUsername();
-    Instant appointmentDateTime = Instant.parse(request.getAppointmentDateTime());
-    Appointment appointment =
-        getByUser_UsernameAndAppointmentDateTime(loginUsername, appointmentDateTime);
-    if (appointment != null) {
-      if (status.equals(AppointmentStatus.AVAILABLE)) {
-        appointment.setStatus(AppointmentStatus.AVAILABLE);
-        String reason = request.getNotes();
-        appointment.setNotes(reason);
-        appointmentRepository.save(appointment);
-        Availability availability =
-            availabilityService.getCoachAvailabilityEntityByAvailabilityDateTime(
-                appointment.getCoach().getUsername(), appointmentDateTime);
-        if (availability != null) {
-          availability.setStatus(AppointmentStatus.AVAILABLE);
-          availabilityRepository.save(availability);
-          // Gửi email thông báo hủy lịch cho coach
-          User user = appointment.getUser();
-          String userEmail = user.getEmail();
-          User coach = appointment.getCoach();
-          String coachEmail = coach.getEmail();
-          String[] recipientEmail = {userEmail, coachEmail};
-          MailBody mailBody =
-              MailBody.builder()
-                  .subject("Thông báo hủy lịch hẹn tư vấn")
-                  .to(recipientEmail)
-                  .body(reason)
-                  .build();
-          emailSenderService.sendEmail(mailBody);
-        }
-        return appointmentMapper.toResponse(appointment);
-      } else {
-        throw new RuntimeException("Invalid status for cancellation");
-      }
-    } else {
-      throw new EntityNotFoundException("Appointment not found");
-    }
   }
 
   private Appointment getByUser_UsernameAndAppointmentDateTime(String username, Instant time) {
@@ -241,5 +152,13 @@ public class AppointmentService {
             .findByCoach_UserIDAndAppointmentDateTimeBetweenOrderByAppointmentDateTimeDesc(
                 coachID, startOfDay, endOfDay);
     return appointments.stream().map(appointmentMapper::toResponse).toList();
+  }
+  public void deleteAppointment(String appointmentID, String googleAccessToken) throws GeneralSecurityException, IOException {
+      Appointment appointment = appointmentRepository.findById(appointmentID).orElse(null);
+      if(appointment != null) {
+          googleCalendarService.deleteEvent(appointment.getGoogleEventId(),googleAccessToken);
+      }
+      appointmentRepository.delete(appointment);
+      availabilityService.confirmConsultantScheduledSlot(appointment.getCoach().getUsername(),appointment.getAppointmentDateTime(),AppointmentStatus.AVAILABLE);
   }
 }

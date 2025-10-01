@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -135,16 +136,19 @@ public class AppointmentController {
         .build();
   }
 
-  @PutMapping("cancel/{status}")
-  public ApiResponse<AppointmentResponse> cancelAppointmentByStatus(
-      @PathVariable AppointmentStatus status, @Valid @RequestBody UpdateAppointmentRequest request)
-      throws MessagingException, IOException {
-    AppointmentResponse response =
-        appointmentService.cancelUserScheduledAppointment(status, request);
-    return ApiResponse.<AppointmentResponse>builder()
-        .code(1000)
-        .message("Appointment cancelled successfully")
-        .data(response)
-        .build();
+  @DeleteMapping("/{appointmentID}/google/{googleAccessToken}")
+    public ApiResponse<Void> deleteAppointmentByID(@PathVariable String appointmentID, @PathVariable String googleAccessToken) {
+      try{
+          appointmentService.deleteAppointment(appointmentID,googleAccessToken);
+          return ApiResponse.<Void>builder()
+                  .message("Appointment deleted successfully")
+                  .code(1000)
+                  .build();
+      } catch (GeneralSecurityException | IOException e) {
+          return ApiResponse.<Void>builder()
+                  .message("Appointment deletion failed")
+                  .code(1000)
+                  .build();
+      }
   }
 }

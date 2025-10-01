@@ -3,7 +3,10 @@ package com.devteria.identity_service.controller;
 import com.devteria.identity_service.dto.ApiResponse;
 import com.devteria.identity_service.dto.SepayCallbackRequest;
 import com.devteria.identity_service.dto.SepayPaymentRequest;
+import com.devteria.identity_service.entity.User;
+import com.devteria.identity_service.enums.UserPlan;
 import com.devteria.identity_service.service.SepayService;
+import com.devteria.identity_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +19,8 @@ import java.util.Map;
 public class SepayController {
     @Autowired
     private SepayService sepayService;
+    @Autowired
+    private UserService userService;
     @PostMapping("/qr/userID/{userID}/coachID/{coachID}")
     public ResponseEntity<Map<String, String>> getQrCode(
             @RequestBody SepayPaymentRequest request , @PathVariable String userID, @PathVariable String coachID) {
@@ -40,9 +45,20 @@ public class SepayController {
         String coachId = parsed.get("coachId");
         System.out.println("UserID = " + userId);
         System.out.println("CoachID = " + coachId);
-        return ApiResponse.<String>builder()
-                .code(1000)
-                .message("success")
-                .build();
+        User user = userService.getUserEntityByID(userId);
+        User coach = userService.getUserEntityByID(coachId);
+        if(user!=null && coach!=null) {
+            userService.updateUserPlan(user.getUserID(), UserPlan.PREMIUM);
+            userService.updateUserCoach(user.getUserID(), coach.getUserID());
+            return ApiResponse.<String>builder()
+                    .code(1000)
+                    .message("success")
+                    .build();
+        }else{
+            return ApiResponse.<String>builder()
+                    .code(500)
+                    .message("Error")
+                    .build();
+        }
     }
 }

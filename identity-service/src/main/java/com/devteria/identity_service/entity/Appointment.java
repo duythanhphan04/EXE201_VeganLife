@@ -54,6 +54,9 @@ public class Appointment {
   @JoinColumn(name = "coachID")
   private User coach;
 
+  @Column(name = "google_event_id")
+  private String googleEventId;
+
   @PrePersist
   protected void onCreate() {
     this.createdAt = Instant.now();

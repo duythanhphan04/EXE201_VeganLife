@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -178,5 +179,12 @@ public class UserService {
         return userRepository
                 .findByUsername(loginUsername)
                 .orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
+    }
+    @Transactional
+    public User updateUserPlan (String userID, UserPlan plan){
+        User user = userRepository.findById(userID).orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
+        user.setPlan(plan);
+        userRepository.save(user);
+        return  user;
     }
 }

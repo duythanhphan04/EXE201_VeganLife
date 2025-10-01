@@ -1,6 +1,11 @@
 package com.devteria.identity_service.service;
 
 import com.devteria.identity_service.dto.CreateAppointmentRequest;
+import com.devteria.identity_service.entity.Appointment;
+import com.devteria.identity_service.exception.ErrorCode;
+import com.devteria.identity_service.exception.WebException;
+import com.devteria.identity_service.repository.AppointmentRepository;
+import com.devteria.identity_service.response.AppointmentResponse;
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -12,6 +17,8 @@ import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,7 +26,13 @@ public class GoogleCalendarService {
 
   private final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
-  private Calendar getCalendarService(String googleAccessToken)
+    private final AppointmentRepository appointmentRepository;
+
+    public GoogleCalendarService(AppointmentRepository appointmentRepository) {
+        this.appointmentRepository = appointmentRepository;
+    }
+
+    private Calendar getCalendarService(String googleAccessToken)
       throws GeneralSecurityException, IOException {
     Credential credential =
         new Credential(BearerToken.authorizationHeaderAccessMethod())
@@ -33,60 +46,57 @@ public class GoogleCalendarService {
         .build();
   }
 
-  public String createGGMeetAppointment(
-      CreateAppointmentRequest request, String userEmail, String googleAccessToken)
-      throws IOException {
-    try {
-      Calendar service = getCalendarService(googleAccessToken);
+    public Event createGGMeetAppointment(
+            CreateAppointmentRequest request, String userEmail, String googleAccessToken)
+            throws IOException {
+        try {
+            Calendar service = getCalendarService(googleAccessToken);
 
-      // Parse thời gian
-      Instant instant = Instant.parse(request.getAppointmentDateTime());
-      EventDateTime start =
-          new EventDateTime()
-              .setDateTime(
-                  new com.google.api.client.util.DateTime(
-                      DateTimeFormatter.ISO_INSTANT.format(instant)))
-              .setTimeZone(VIETNAM_ZONE.toString());
-      EventDateTime end =
-          new EventDateTime()
-              .setDateTime(
-                  new com.google.api.client.util.DateTime(
-                      DateTimeFormatter.ISO_INSTANT.format(instant.plusSeconds(60 * 60))))
-              .setTimeZone(VIETNAM_ZONE.toString());
+            // Parse thời gian
+            Instant instant = Instant.parse(request.getAppointmentDateTime());
+            EventDateTime start =
+                    new EventDateTime()
+                            .setDateTime(new com.google.api.client.util.DateTime(
+                                    DateTimeFormatter.ISO_INSTANT.format(instant)))
+                            .setTimeZone(VIETNAM_ZONE.toString());
 
-      Event event =
-          new Event()
-              .setSummary("Coaching Session with " + userEmail)
-              .setDescription("Coaching session created from Identity Service")
-              .setStart(start)
-              .setEnd(end);
+            EventDateTime end =
+                    new EventDateTime()
+                            .setDateTime(new com.google.api.client.util.DateTime(
+                                    DateTimeFormatter.ISO_INSTANT.format(instant.plusSeconds(3600))))
+                            .setTimeZone(VIETNAM_ZONE.toString());
 
-      // Thêm Google Meet
-      ConferenceSolutionKey solutionKey = new ConferenceSolutionKey().setType("hangoutsMeet");
-      CreateConferenceRequest createConferenceRequest =
-          new CreateConferenceRequest()
-              .setRequestId("identity-service-" + System.currentTimeMillis())
-              .setConferenceSolutionKey(solutionKey);
-      ConferenceData conferenceData =
-          new ConferenceData().setCreateRequest(createConferenceRequest);
-      event.setConferenceData(conferenceData);
+            Event event = new Event()
+                    .setSummary("Coaching Session with " + userEmail)
+                    .setDescription("Coaching session created from Identity Service")
+                    .setStart(start)
+                    .setEnd(end);
 
-      Event createdEvent =
-          service.events().insert("primary", event).setConferenceDataVersion(1).execute();
+            // Thêm Google Meet
+            ConferenceSolutionKey solutionKey = new ConferenceSolutionKey().setType("hangoutsMeet");
+            CreateConferenceRequest createConferenceRequest =
+                    new CreateConferenceRequest()
+                            .setRequestId("identity-service-" + System.currentTimeMillis())
+                            .setConferenceSolutionKey(solutionKey);
+            ConferenceData conferenceData =
+                    new ConferenceData().setCreateRequest(createConferenceRequest);
+            event.setConferenceData(conferenceData);
 
-      // Lấy link Google Meet
-      if (createdEvent.getConferenceData() != null
-          && createdEvent.getConferenceData().getEntryPoints() != null) {
-        for (EntryPoint entryPoint : createdEvent.getConferenceData().getEntryPoints()) {
-          if ("video".equals(entryPoint.getEntryPointType()) && entryPoint.getUri() != null) {
-            return entryPoint.getUri();
-          }
+            // Gửi request tạo event
+            Event createdEvent = service.events()
+                    .insert("primary", event)
+                    .setConferenceDataVersion(1)
+                    .setSendUpdates("all")
+                    .execute();
+
+            return createdEvent; // return cả object Event (có cả eventId + hangoutLink)
+        } catch (GeneralSecurityException e) {
+            throw new IOException("Error creating Google Calendar event", e);
         }
-      }
-
-      return createdEvent.getHtmlLink();
-    } catch (GeneralSecurityException e) {
-      throw new IOException("Error creating Google Calendar event", e);
     }
-  }
+    public void deleteEvent(String eventID, String googleAccessToken) throws GeneralSecurityException, IOException {
+        Calendar service = getCalendarService(googleAccessToken);
+        service.events().delete("primary", eventID).execute();
+    }
+
 }

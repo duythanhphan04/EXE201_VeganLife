@@ -18,4 +18,5 @@ public class AppointmentResponse {
   String createdAt;
   UserResponse user;
   UserResponse coach;
+  String googleEventId;
 }
