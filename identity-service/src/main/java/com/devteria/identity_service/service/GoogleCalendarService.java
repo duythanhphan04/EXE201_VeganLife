@@ -13,10 +13,12 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.*;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -47,7 +49,7 @@ public class GoogleCalendarService {
   }
 
     public Event createGGMeetAppointment(
-            CreateAppointmentRequest request, String userEmail, String googleAccessToken)
+            CreateAppointmentRequest request, String userEmail, String googleAccessToken , String coachEmail)
             throws IOException {
         try {
             Calendar service = getCalendarService(googleAccessToken);
@@ -59,18 +61,26 @@ public class GoogleCalendarService {
                             .setDateTime(new com.google.api.client.util.DateTime(
                                     DateTimeFormatter.ISO_INSTANT.format(instant)))
                             .setTimeZone(VIETNAM_ZONE.toString());
-
             EventDateTime end =
                     new EventDateTime()
                             .setDateTime(new com.google.api.client.util.DateTime(
                                     DateTimeFormatter.ISO_INSTANT.format(instant.plusSeconds(3600))))
                             .setTimeZone(VIETNAM_ZONE.toString());
+            List<EventAttendee> attendees = Arrays.asList(
+                    new EventAttendee()
+                            .setEmail(userEmail)
+                            .setResponseStatus("accepted"),  // User tự động accept
+                    new EventAttendee()
+                            .setEmail(coachEmail)
+                            .setResponseStatus("accepted")  // Coach cần confirm
+            );
 
             Event event = new Event()
                     .setSummary("Coaching Session with " + userEmail)
                     .setDescription("Coaching session created from Identity Service")
                     .setStart(start)
-                    .setEnd(end);
+                    .setEnd(end)
+                    .setAttendees(attendees);
 
             // Thêm Google Meet
             ConferenceSolutionKey solutionKey = new ConferenceSolutionKey().setType("hangoutsMeet");

@@ -36,12 +36,14 @@ public class AppointmentService {
     // Lấy user đang login trong hệ thống
     String loginUsername = userService.getLoggedInUsername();
     User user = userService.getUserEntity(loginUsername);
-    // Tạo lịch hẹn trên Google Calendar và lấy link Google Meet
+    String coachID = request.getCoachID();
+    User coach = userService.getUserEntityByID(coachID);
     Event eventGG =
         googleCalendarService.createGGMeetAppointment(
             request,
             user.getEmail(),
-            request.getGoogleAccessToken() // cần có field googleAccessToken trong request
+            request.getGoogleAccessToken(),
+                coach.getEmail()// cần có field googleAccessToken trong request
             );
 
     // Tạo entity Appointment
@@ -54,7 +56,6 @@ public class AppointmentService {
     appointment.setUser(user);
 
     // Set coach
-    User coach = userService.getUserEntityByID(request.getCoachID());
     String coachUsername = coach.getUsername();
     appointment.setCoach(coach);
 
