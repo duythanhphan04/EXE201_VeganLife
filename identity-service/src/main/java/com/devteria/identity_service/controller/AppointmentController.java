@@ -7,7 +7,6 @@ import com.devteria.identity_service.enums.AppointmentStatus;
 import com.devteria.identity_service.response.AppointmentResponse;
 import com.devteria.identity_service.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.security.GeneralSecurityException;

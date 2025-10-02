@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 public class AvailabilityResponse {
   String availabilityID;
   AppointmentStatus status;
-  List<String> availabilityDatetime ;
+  String availabilityDatetime ;
   String createdAt;
   UserResponse coach;
 }
