@@ -61,7 +61,6 @@ public class SepayController {
                     .build();
         }
     }
-
     @GetMapping("/status/userID/{userID}/coachID/{coachID}")
     public ResponseEntity<ApiResponse<Map<String, String>>> getPaymentStatus(
             @PathVariable String userID,

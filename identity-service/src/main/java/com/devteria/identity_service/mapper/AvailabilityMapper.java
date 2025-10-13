@@ -11,8 +11,6 @@ import java.util.List;
 
 @Mapper(componentModel = "spring",uses = {UserMapper.class})
 public interface AvailabilityMapper {
-    @Mapping(target = "availabilityDatetime",
-            expression = "java(mapInstantToList(availability.getAvailabilityDatetime()))")
     AvailabilityResponse toAvailabilityResponse(Availability availability);
     default List<String> mapInstantToList(Instant instant) {
         if (instant == null) {

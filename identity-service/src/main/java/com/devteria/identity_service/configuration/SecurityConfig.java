@@ -41,9 +41,6 @@ public class SecurityConfig {
     @Autowired private AuthenticationService authenticationService;
     @Autowired private OAuth2AuthorizedClientService authorizedClientService;
 
-    /**
-     * ✅ FilterChain #2: Dành cho API, WebSocket và các endpoint thông thường
-     */
     @Order(2)
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

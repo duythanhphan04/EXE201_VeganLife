@@ -99,7 +99,7 @@ public class GoogleCalendarService {
                     .setSendUpdates("all")
                     .execute();
 
-            return createdEvent; // return cả object Event (có cả eventId + hangoutLink)
+            return createdEvent;
         } catch (GeneralSecurityException e) {
             throw new IOException("Error creating Google Calendar event", e);
         }
