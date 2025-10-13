@@ -5,10 +5,10 @@ import com.devteria.identity_service.entity.Appointment;
 import com.devteria.identity_service.response.AppointmentResponse;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = { UserMapper.class })
 public interface AppointmentMapper {
     Appointment toEntity(CreateAppointmentRequest request);
 
     AppointmentResponse toResponse(Appointment appointment);
-
 }
+

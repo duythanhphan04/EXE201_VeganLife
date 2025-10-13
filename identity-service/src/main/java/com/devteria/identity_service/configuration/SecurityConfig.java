@@ -27,126 +27,148 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-  protected static final String SIGNER_KEY =
-      "p7cHINXNIOg7JEYDrVOYKzMREMuZtAtuZzWsz00TyCX+CikSXSjoLImFBx6ZrsJ6";
 
-  @Autowired private CustomJwtDecoder customJwtDecoder;
-  @Autowired private AuthenticationService authenticationService;
-  @Autowired private OAuth2AuthorizedClientService authorizedClientService;
+    protected static final String SIGNER_KEY =
+            "p7cHINXNIOg7JEYDrVOYKzMREMuZtAtuZzWsz00TyCX+CikSXSjoLImFBx6ZrsJ6";
 
-  @Order(2)
-  @Bean
-  public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-    httpSecurity.authorizeHttpRequests(
-        request ->
-            request
-                .requestMatchers(HttpMethod.POST)
-                .permitAll()
-                .requestMatchers(HttpMethod.GET)
-                .permitAll()
-                .requestMatchers(HttpMethod.DELETE)
-                .permitAll()
-                .requestMatchers(HttpMethod.PUT)
-                .permitAll()
-                .anyRequest()
-                .authenticated());
-    httpSecurity.oauth2ResourceServer(
-        oauth2 ->
-            oauth2
-                .jwt(
-                    jwtConfigurer ->
-                        jwtConfigurer
-                            .decoder(customJwtDecoder)
-                            .jwtAuthenticationConverter(authenticationConverter()))
-                .authenticationEntryPoint(new JWTAuthenticationEntryPoint()));
-    httpSecurity.csrf(AbstractHttpConfigurer::disable).cors(Customizer.withDefaults());
-    return httpSecurity.build();
-  }
+    @Autowired private CustomJwtDecoder customJwtDecoder;
+    @Autowired private AuthenticationService authenticationService;
+    @Autowired private OAuth2AuthorizedClientService authorizedClientService;
 
-  @Bean
-  @Order(1)
-  public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
-    http.securityMatcher("/oauth2/**", "/login/**")
-        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-        .oauth2Login(
-            oauth2 ->
-                oauth2
-                    .loginPage("/login")
-                    .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService()))
-                    .successHandler(
-                        (request, response, authentication) -> {
-                          OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-                          String email = oAuth2User.getAttribute("email");
-                          String name = oAuth2User.getAttribute("name");
-                          User user = authenticationService.findOrCreateUser(email, name);
+    /**
+     * ✅ FilterChain #2: Dành cho API, WebSocket và các endpoint thông thường
+     */
+    @Order(2)
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-                          OAuth2AuthenticationToken oauthToken =
-                              (OAuth2AuthenticationToken) authentication;
+        http
+                .authorizeHttpRequests(request -> request
+                        // 🔓 Cho phép WebSocket, SockJS, STOMP connect
+                        .requestMatchers(
+                                "/chat-websocket/**", "/ws/**", "/topic/**", "/queue/**", "/app/**"
+                        ).permitAll()
 
-                          // Lấy client đã được Spring lưu
-                          OAuth2AuthorizedClient client =
-                              authorizedClientService.loadAuthorizedClient(
-                                  oauthToken.getAuthorizedClientRegistrationId(),
-                                  oauthToken.getName());
+                        // 🔓 Cho phép các request REST cơ bản (nếu bạn muốn)
+                        .requestMatchers(HttpMethod.GET).permitAll()
+                        .requestMatchers(HttpMethod.POST).permitAll()
+                        .requestMatchers(HttpMethod.PUT).permitAll()
+                        .requestMatchers(HttpMethod.DELETE).permitAll()
 
-                          // Token Google gốc
-                          String googleAccessToken = client.getAccessToken().getTokenValue();
+                        // 🔒 Các endpoint còn lại cần JWT
+                        .anyRequest().authenticated()
+                )
 
-                          // Token JWT của app
-                          String appToken = authenticationService.generateToken(user);
+                // ⚙️ Cấu hình OAuth2 Resource Server (JWT)
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .decoder(customJwtDecoder)
+                                .jwtAuthenticationConverter(authenticationConverter())
+                        )
+                        .authenticationEntryPoint(new JWTAuthenticationEntryPoint())
+                )
 
-                          // Trả JSON đẹp về client
-                          response.setContentType("application/json");
-                          response.setCharacterEncoding("UTF-8");
-                          response
-                              .getWriter()
-                              .write(
-                                  "{\n"
-                                      + "  \"appToken\": \""
-                                      + appToken
-                                      + "\",\n"
-                                      + "  \"googleAccessToken\": \""
-                                      + googleAccessToken
-                                      + "\"\n"
-                                      + "}");
-                          //                          response.sendRedirect(
-                          //                              "http://localhost:5173/" + appToken + "/"
-                          // + googleAccessToken);
-                        }));
-    return http.build();
-  }
+                // ❌ Tắt CSRF để STOMP và REST hoạt động bình thường
+                .csrf(AbstractHttpConfigurer::disable)
 
-  private OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService() {
-    return new DefaultOAuth2UserService();
-  }
+                // ✅ Bật CORS global (dùng bean bên dưới)
+                .cors(Customizer.withDefaults());
 
-  @Bean
-  public CorsFilter corsFilter() {
-    CorsConfiguration config = new CorsConfiguration();
-    config.addAllowedOriginPattern("*");
-    config.addAllowedMethod("*");
-    config.addAllowedHeader("*");
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return new CorsFilter(source);
-  }
+        return http.build();
+    }
 
-  @Bean
-  JwtAuthenticationConverter authenticationConverter() {
-    JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter =
-        new JwtGrantedAuthoritiesConverter();
-    jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-    JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-    jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-    return jwtAuthenticationConverter;
-  }
+    /**
+     * ✅ FilterChain #1: Dành cho OAuth2 Login (Google, v.v.)
+     */
+    @Bean
+    @Order(1)
+    public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/oauth2/**", "/login/**")
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService()))
+                        .successHandler((request, response, authentication) -> {
+                            OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+                            String email = oAuth2User.getAttribute("email");
+                            String name = oAuth2User.getAttribute("name");
 
-  @Bean
-  PasswordEncoder passwordEncoder() {
-    return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(10);
-  }
+                            // Tạo hoặc lấy user từ DB
+                            User user = authenticationService.findOrCreateUser(email, name);
+
+                            OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+
+                            // Lấy access token gốc của Google
+                            OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
+                                    oauthToken.getAuthorizedClientRegistrationId(),
+                                    oauthToken.getName());
+
+                            String googleAccessToken = client.getAccessToken().getTokenValue();
+
+                            // Sinh JWT app token
+                            String appToken = authenticationService.generateToken(user);
+
+                            // Redirect lại frontend
+                            response.sendRedirect(
+                                    "http://localhost:5173/oauth2/success?appToken=" + appToken
+                                            + "&googleToken=" + googleAccessToken
+                            );
+                        })
+                );
+
+        return http.build();
+    }
+
+    /**
+     * ✅ Cấu hình user service cho OAuth2 (Google)
+     */
+    private OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService() {
+        return new DefaultOAuth2UserService();
+    }
+
+    /**
+     * ✅ CORS Config Global (cho phép frontend localhost:5173)
+     */
+    @Bean
+    public CorsFilter corsFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
+
+    /**
+     * ✅ JWT converter: để Spring Security hiểu các role trong token
+     */
+    @Bean
+    JwtAuthenticationConverter authenticationConverter() {
+        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter =
+                new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
+    }
+
+    /**
+     * ✅ Password encoder cho app
+     */
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(10);
+    }
 }

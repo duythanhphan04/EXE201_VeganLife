@@ -77,7 +77,7 @@ public class GoogleCalendarService {
 
             Event event = new Event()
                     .setSummary("Coaching Session with " + userEmail)
-                    .setDescription("Coaching session created from Identity Service")
+                    .setDescription("Coaching session created from Vegan Life")
                     .setStart(start)
                     .setEnd(end)
                     .setAttendees(attendees);

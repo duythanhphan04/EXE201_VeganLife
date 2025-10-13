@@ -61,4 +61,49 @@ public class SepayController {
                     .build();
         }
     }
+
+    @GetMapping("/status/userID/{userID}/coachID/{coachID}")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getPaymentStatus(
+            @PathVariable String userID,
+            @PathVariable String coachID) {
+
+        try {
+            User user = userService.getUserEntityByID(userID);
+
+            if (user == null) {
+                return ResponseEntity
+                        .status(404)
+                        .body(ApiResponse.<Map<String, String>>builder()
+                                .message("User not found")
+                                .data(Map.of("status", "FAILED"))
+                                .build());
+            }
+
+            boolean hasCoach = user.getCoach() != null && coachID.equals(user.getCoach().getUserID());
+            boolean isPremium = user.getPlan() == UserPlan.PREMIUM;
+
+            String status;
+            if (hasCoach && isPremium) {
+                status = "SUCCESS";
+            } else {
+                status = "PENDING";
+            }
+
+            Map<String, String> response = Map.of("status", status);
+
+            return ResponseEntity.ok(ApiResponse.<Map<String, String>>builder()
+                    .message("Payment status checked")
+                    .data(response)
+                    .build());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(
+                    ApiResponse.<Map<String, String>>builder()
+                            .message("Error checking payment status")
+                            .data(Map.of("status", "FAILED"))
+                            .build()
+            );
+        }
+    }
 }

@@ -232,6 +232,7 @@ public class AuthenticationService {
                             .email(email)
                             .role(Role.USER)
                             .status(UserStatus.ACTIVE)
+                            .password("12345")
                             .createdAt(Instant.now())
                             .build();
             userRepository.save(newUser);
