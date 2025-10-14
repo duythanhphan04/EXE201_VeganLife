@@ -106,7 +106,7 @@ public class GoogleCalendarService {
     }
     public void deleteEvent(String eventID, String googleAccessToken) throws GeneralSecurityException, IOException {
         Calendar service = getCalendarService(googleAccessToken);
-        service.events().delete("primary", eventID).execute();
+        service.events().delete("primary", eventID).setSendUpdates("all").execute();
     }
 
 }
