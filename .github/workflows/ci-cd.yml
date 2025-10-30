@@ -35,7 +35,7 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ vars.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker image
-        run: docker build -t ${{ vars.DOCKER_USERNAME }}/veganlife:latest
+        run: docker build -t ${{ vars.DOCKER_USERNAME }}/veganlife:latest .
         working-directory: ./identity-service
 
       - name: Push Docker image
