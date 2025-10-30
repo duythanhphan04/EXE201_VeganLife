@@ -36,6 +36,7 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t ${{ vars.DOCKER_USERNAME }}/veganlife:latest
+        working-directory: ./identity-service
 
       - name: Push Docker image
         run: docker push ${{ vars.DOCKER_USERNAME }}/veganlife:latest
