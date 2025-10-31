@@ -114,7 +114,7 @@ public class SecurityConfig {
 
                             // Redirect lại frontend
                             response.sendRedirect(
-                                    "http://localhost:5173/oauth2/success?appToken=" + appToken
+                                    "https://veganlife.social/oauth2/success?appToken=" + appToken
                                             + "&googleToken=" + googleAccessToken
                             );
                         })
@@ -143,7 +143,7 @@ public class SecurityConfig {
         config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        
+
         return new CorsFilter(source);
     }
 
