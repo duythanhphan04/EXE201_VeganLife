@@ -32,7 +32,8 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 # Tạo thư mục cho ứng dụng
 WORKDIR /app
-
+# Sao chép file cấu hình bí mật vào image
+COPY src/main/resources/application-secret.properties /app/application-secret.properties
 # Sao chép file JAR của
 COPY target/identity-service-0.0.1-SNAPSHOT.jar app.jar
 
