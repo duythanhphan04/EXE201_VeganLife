@@ -47,7 +47,8 @@ public class AppointmentService {
             );
 
     // Tạo entity Appointment
-    Appointment appointment = appointmentMapper.toEntity(request);
+    Appointment appointment = new Appointment();
+    appointment.setNotes(request.getNotes());
     appointment.setLink(eventGG.getHangoutLink());
     appointment.setGoogleEventId(eventGG.getId());
     Instant appointmentDateTime = Instant.parse(request.getAppointmentDateTime());
@@ -66,12 +67,26 @@ public class AppointmentService {
     availabilityService.confirmConsultantScheduledSlot(
         coachUsername, appointmentDateTime, AppointmentStatus.UNAVAILABLE);
 
-    return appointmentMapper.toResponse(appointment);
+    AppointmentResponse response = new  AppointmentResponse();
+    response.setAppointmentID(appointment.getAppointmentID());
+    response.setAppointmentDateTime(appointment.getAppointmentDateTime().toString());
+    response.setNotes(appointment.getNotes());
+    response.setStatus(appointment.getStatus());
+    response.setLink(appointment.getLink());
+    return response;
   }
 
   public List<AppointmentResponse> getAllAppointments() {
     List<Appointment> appointments = appointmentRepository.findAll();
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
+    return appointments.stream().map(appointment -> {
+        AppointmentResponse response = new AppointmentResponse();
+        response.setAppointmentID(appointment.getAppointmentID());
+        response.setAppointmentDateTime(appointment.getAppointmentDateTime().toString());
+        response.setNotes(appointment.getNotes());
+        response.setStatus(appointment.getStatus());
+        response.setLink(appointment.getLink());
+        return response;
+    }).toList();
   }
   public Appointment getAppointmentById(String appointmentId) {
     return appointmentRepository
@@ -81,7 +96,13 @@ public class AppointmentService {
 
   public AppointmentResponse getAppointmentResponseById(String appointmentId) {
     Appointment appointment = getAppointmentById(appointmentId);
-    return appointmentMapper.toResponse(appointment);
+    AppointmentResponse response = new AppointmentResponse();
+    response.setAppointmentID(appointment.getAppointmentID());
+    response.setAppointmentDateTime(appointment.getAppointmentDateTime().toString());
+    response.setNotes(appointment.getNotes());
+    response.setStatus(appointment.getStatus());
+    response.setLink(appointment.getLink());
+    return response;
   }
 
   public AppointmentResponse updateAppointment(
@@ -91,7 +112,13 @@ public class AppointmentService {
     appointment.setNotes(request.getNotes());
     appointment.setStatus(request.getStatus());
     appointmentRepository.save(appointment);
-    return appointmentMapper.toResponse(appointment);
+    AppointmentResponse response = new AppointmentResponse();
+    response.setAppointmentID(appointment.getAppointmentID());
+    response.setAppointmentDateTime(appointment.getAppointmentDateTime().toString());
+    response.setNotes(appointment.getNotes());
+    response.setStatus(appointment.getStatus());
+    response.setLink(appointment.getLink());
+    return response;
   }
 
   private List<Appointment> getByUser_UsernameAndAppointmentDateTimeBetween(
@@ -124,13 +151,29 @@ public class AppointmentService {
   public List<AppointmentResponse> getAppointmentsByUserID(String userID) {
     List<Appointment> appointments =
         appointmentRepository.findByUser_UserIDOrderByAppointmentDateTimeAsc(userID);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
+    return appointments.stream().map(appointment -> {
+        AppointmentResponse response = new AppointmentResponse();
+        response.setAppointmentID(appointment.getAppointmentID());
+        response.setAppointmentDateTime(appointment.getAppointmentDateTime().toString());
+        response.setNotes(appointment.getNotes());
+        response.setStatus(appointment.getStatus());
+        response.setLink(appointment.getLink());
+        return response;
+    }).toList();
   }
 
   public List<AppointmentResponse> getAppointmentsByCoachID(String coachID) {
     List<Appointment> appointments =
         appointmentRepository.findByCoach_UserIDOrderByAppointmentDateTimeAsc(coachID);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
+    return appointments.stream().map(appointment -> {
+        AppointmentResponse response = new AppointmentResponse();
+        response.setAppointmentID(appointment.getAppointmentID());
+        response.setAppointmentDateTime(appointment.getAppointmentDateTime().toString());
+        response.setNotes(appointment.getNotes());
+        response.setStatus(appointment.getStatus());
+        response.setLink(appointment.getLink());
+        return response;
+    }).toList();
   }
 
   public List<AppointmentResponse> getTodayAppointmentsByUserID(String userID) {
@@ -141,7 +184,15 @@ public class AppointmentService {
         appointmentRepository
             .findByUser_UserIDAndAppointmentDateTimeBetweenOrderByAppointmentDateTimeDesc(
                 userID, startOfDay, endOfDay);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
+    return appointments.stream().map(appointment -> {
+        AppointmentResponse response = new AppointmentResponse();
+        response.setAppointmentID(appointment.getAppointmentID());
+        response.setAppointmentDateTime(appointment.getAppointmentDateTime().toString());
+        response.setNotes(appointment.getNotes());
+        response.setStatus(appointment.getStatus());
+        response.setLink(appointment.getLink());
+        return response;
+    }).toList();
   }
 
   public List<AppointmentResponse> getTodayAppointmentsByCoachID(String coachID) {
@@ -152,7 +203,15 @@ public class AppointmentService {
         appointmentRepository
             .findByCoach_UserIDAndAppointmentDateTimeBetweenOrderByAppointmentDateTimeDesc(
                 coachID, startOfDay, endOfDay);
-    return appointments.stream().map(appointmentMapper::toResponse).toList();
+    return appointments.stream().map(appointment -> {
+        AppointmentResponse response = new AppointmentResponse();
+        response.setAppointmentID(appointment.getAppointmentID());
+        response.setAppointmentDateTime(appointment.getAppointmentDateTime().toString());
+        response.setNotes(appointment.getNotes());
+        response.setStatus(appointment.getStatus());
+        response.setLink(appointment.getLink());
+        return response;
+    }).toList();
   }
   public void deleteAppointment(String appointmentID, String googleAccessToken) throws GeneralSecurityException, IOException {
       Appointment appointment = appointmentRepository.findById(appointmentID).orElse(null);

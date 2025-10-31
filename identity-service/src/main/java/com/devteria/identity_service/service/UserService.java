@@ -43,31 +43,63 @@ public class UserService {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new WebException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
-        User newUser = userMapper.toUser(request);
+        User newUser = new User();
+        newUser.setUsername(request.getUsername());
+        newUser.setFullName(request.getFullName());
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         newUser.setRole(Role.USER);
         newUser.setStatus(UserStatus.ACTIVE);
         newUser.setCreatedAt(Instant.now());
         newUser.setPlan(UserPlan.FREE);
         userRepository.save(newUser);
-        return userMapper.toUserResponse(newUser);
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(newUser.getUsername());
+        userResponse.setFullName(newUser.getFullName());
+        userResponse.setRole(newUser.getRole());
+        userResponse.setStatus(newUser.getStatus());
+        userResponse.setCreatedAt(newUser.getCreatedAt().toString());
+        userResponse.setPlan(newUser.getPlan());
+        return userResponse ;
     }
 
     public UserResponse createCoach(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new WebException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
-        User newUser = userMapper.toUser(request);
+        User newUser = new User();
+        newUser.setUsername(request.getUsername());
+        newUser.setFullName(request.getFullName());
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         newUser.setRole(Role.COACH);
         newUser.setStatus(UserStatus.ACTIVE);
         userRepository.save(newUser);
-        return userMapper.toUserResponse(newUser);
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(newUser.getUsername());
+        userResponse.setFullName(newUser.getFullName());
+        userResponse.setRole(newUser.getRole());
+        userResponse.setStatus(newUser.getStatus());
+        userResponse.setCreatedAt(newUser.getCreatedAt().toString());
+        userResponse.setPlan(newUser.getPlan());
+        return userResponse ;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getAllUser() {
-        return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
+        return userRepository.findAll().stream().map(user -> {
+            UserResponse userResponse = new UserResponse();
+            userResponse.setUsername(user.getUsername());
+            userResponse.setFullName(user.getFullName());
+            userResponse.setEmail(user.getEmail());
+            userResponse.setRole(user.getRole());
+            userResponse.setStatus(user.getStatus());
+            userResponse.setImg(user.getImg());
+            userResponse.setCreatedAt(user.getCreatedAt().toString());
+            userResponse.setPlan(user.getPlan());
+            if (user.getCoach() != null) {
+                userResponse.setCoach(user.getCoach());
+            }
+            return userResponse;
+        }).toList();
     }
 
     public User getUserEntityByID(String id) {
@@ -77,23 +109,26 @@ public class UserService {
     }
 
     public UserResponse getUserByID(String id) {
-        return userMapper.toUserResponse(
-                userRepository.findById(id).orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND)));
+        User user =
+                userRepository
+                        .findById(id)
+                        .orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(user.getUsername());
+        userResponse.setFullName(user.getFullName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setRole(user.getRole());
+        userResponse.setStatus(user.getStatus());
+        userResponse.setImg(user.getImg());
+        userResponse.setCreatedAt(user.getCreatedAt().toString());
+        userResponse.setPlan(user.getPlan());
+        if (user.getCoach() != null) {
+            userResponse.setCoach(user.getCoach());
+        }
+        return userResponse;
     }
 
-    public UserResponse getUserByUsername(String username) {
-        return userMapper.toUserResponse(
-                userRepository
-                        .findByUsername(username)
-                        .orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND)));
-    }
 
-    public UserResponse getUserByEmail(String email) {
-        return userMapper.toUserResponse(
-                userRepository
-                        .findByEmail(email)
-                        .orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND)));
-    }
 
     public UserResponse updateUser(String userID, UserUpdateRequest request) {
         User user =
@@ -104,7 +139,19 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setImg(request.getImg());
         userRepository.save(user);
-        return userMapper.toUserResponse(user);
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(user.getUsername());
+        userResponse.setFullName(user.getFullName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setRole(user.getRole());
+        userResponse.setStatus(user.getStatus());
+        userResponse.setImg(user.getImg());
+        userResponse.setCreatedAt(user.getCreatedAt().toString());
+        userResponse.setPlan(user.getPlan());
+        if (user.getCoach() != null) {
+            userResponse.setCoach(user.getCoach());
+        }
+        return userResponse;
     }
 
     public User getLoggedInUser() {
@@ -119,7 +166,19 @@ public class UserService {
         User u =
                 userRepository.findById(id).orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(u);
-        return userMapper.toUserResponse(u);
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(u.getUsername());
+        userResponse.setFullName(u.getFullName());
+        userResponse.setEmail(u.getEmail());
+        userResponse.setRole(u.getRole());
+        userResponse.setStatus(u.getStatus());
+        userResponse.setImg(u.getImg());
+        userResponse.setCreatedAt(u.getCreatedAt().toString());
+        userResponse.setPlan(u.getPlan());
+        if (u.getCoach() != null) {
+            userResponse.setCoach(u.getCoach());
+        }
+        return userResponse ;
     }
 
     public UserResponse updateUserStatus(String id, UserStatus status) {
@@ -127,7 +186,12 @@ public class UserService {
                 userRepository.findById(id).orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
         user.setStatus(status);
         userRepository.save(user);
-        return userMapper.toUserResponse(user);
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(user.getUsername());
+        userResponse.setFullName(user.getFullName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setRole(user.getRole());
+        return userResponse;
     }
 
     public UserResponse updateUserCoach(String userID, String coachID) {
@@ -144,29 +208,96 @@ public class UserService {
         }
         user.setCoach(coach);
         userRepository.save(user);
-        return userMapper.toUserResponse(user);
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(user.getUsername());
+        userResponse.setFullName(user.getFullName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setRole(user.getRole());
+        userResponse.setStatus(user.getStatus());
+        userResponse.setImg(user.getImg());
+        userResponse.setCreatedAt(user.getCreatedAt().toString());
+        userResponse.setPlan(user.getPlan());
+        if (user.getCoach() != null) {
+            userResponse.setCoach(user.getCoach());
+        }
+        return userResponse;
     }
 
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
-        return userMapper.toUserResponse(
+        User user =
                 userRepository
                         .findByUsername(name)
-                        .orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND)));
+                        .orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(user.getUsername());
+        userResponse.setFullName(user.getFullName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setRole(user.getRole());
+        userResponse.setStatus(user.getStatus());
+        userResponse.setImg(user.getImg());
+        userResponse.setCreatedAt(user.getCreatedAt().toString());
+        userResponse.setPlan(user.getPlan());
+        if (user.getCoach() != null) {
+            userResponse.setCoach(user.getCoach());
+        }
+        return userResponse;
     }
 
     public List<UserResponse> getUserByStatus(UserStatus status) {
-        return userRepository.findByStatus(status).stream().map(userMapper::toUserResponse).toList();
+        return userRepository.findByStatus(status).stream().map(user -> {
+            UserResponse userResponse = new UserResponse();
+            userResponse.setUsername(user.getUsername());
+            userResponse.setFullName(user.getFullName());
+            userResponse.setEmail(user.getEmail());
+            userResponse.setRole(user.getRole());
+            userResponse.setStatus(user.getStatus());
+            userResponse.setImg(user.getImg());
+            userResponse.setCreatedAt(user.getCreatedAt().toString());
+            userResponse.setPlan(user.getPlan());
+            if (user.getCoach() != null) {
+                userResponse.setCoach(user.getCoach());
+            }
+            return userResponse;
+        }).toList();
     }
 
     public List<UserResponse> getUserByRole(Role role) {
-        return userRepository.findByRole(role).stream().map(userMapper::toUserResponse).toList();
+        return userRepository.findByRole(role).stream().map(user -> {
+            UserResponse userResponse = new UserResponse();
+            userResponse.setUsername(user.getUsername());
+            userResponse.setFullName(user.getFullName());
+            userResponse.setEmail(user.getEmail());
+            userResponse.setRole(user.getRole());
+            userResponse.setStatus(user.getStatus());
+            userResponse.setImg(user.getImg());
+            userResponse.setCreatedAt(user.getCreatedAt().toString());
+            userResponse.setPlan(user.getPlan());
+            if (user.getCoach() != null) {
+                userResponse.setCoach(user.getCoach());
+            }
+            return userResponse;
+        }).toList();
     }
 
     public List<UserResponse> getUserByCoach(String coachId) {
         return userRepository.findByCoachUserID(coachId).stream()
-                .map(userMapper::toUserResponse)
+                .map(user -> {
+                    UserResponse userResponse = new UserResponse();
+                    userResponse.setUsername(user.getUsername());
+                    userResponse.setFullName(user.getFullName());
+                    userResponse.setEmail(user.getEmail());
+                    userResponse.setRole(user.getRole());
+                    userResponse.setStatus(user.getStatus());
+                    userResponse.setImg(user.getImg());
+                    userResponse.setCreatedAt(user.getCreatedAt().toString());
+                    userResponse.setPlan(user.getPlan());
+                    if (user.getCoach() != null) {
+                        userResponse.setCoach(user.getCoach());
+                    }
+                    return userResponse;
+                })
                 .toList();
     }
 

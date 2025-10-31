@@ -4,6 +4,7 @@ import com.devteria.identity_service.dto.*;
 import com.devteria.identity_service.entity.InvalidatedToken;
 import com.devteria.identity_service.entity.User;
 import com.devteria.identity_service.enums.Role;
+import com.devteria.identity_service.enums.UserPlan;
 import com.devteria.identity_service.enums.UserStatus;
 import com.devteria.identity_service.exception.ErrorCode;
 import com.devteria.identity_service.exception.WebException;
@@ -231,6 +232,7 @@ public class AuthenticationService {
                             .username(name)
                             .email(email)
                             .role(Role.USER)
+                            .plan(UserPlan.FREE)
                             .status(UserStatus.ACTIVE)
                             .password("12345")
                             .createdAt(Instant.now())
