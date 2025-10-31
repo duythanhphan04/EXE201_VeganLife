@@ -87,7 +87,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/**")
+                .securityMatcher("/login/**", "/oauth2/**")
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
