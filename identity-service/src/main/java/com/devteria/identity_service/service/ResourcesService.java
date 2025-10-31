@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
 
+import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,16 +31,32 @@ public class ResourcesService {
     private final UserService userService;
     private final UserRepository userRepository;
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResourcesResponse createResources(CreateResourcesRequest request) {
-        Resources resources = resourcesMapper.toResources(request);
+//        Resources resources = resourcesMapper.toResources(request);
+        Resources resources = new Resources();
+        resources.setResourcesName(request.getResourcesName());
+        resources.setImg(request.getImg());
+        resources.setDescription(request.getDescription());
+        resources.setContent(request.getContent());
+        resources.setResourcesType(request.getResourcesType());
+        resources.setResourcesStatus(request.getResourcesStatus());
         String loginUsername = userService.getLoggedInUsername();
         User loginUser = userService.getUserEntity(loginUsername);
         resources.setUser(loginUser);
         resources.setReadingTime(calculateReadingTime(request.getContent()));
         resources.setCreatedAt(Instant.now());
         resourcesRepository.save(resources);
-        return resourcesMapper.toResourcesResponse(resources);
+        ResourcesResponse resourcesResponse = new ResourcesResponse();
+        resourcesResponse.setResourcesID(resources.getResourcesID());
+        resourcesResponse.setResourcesName(resources.getResourcesName());
+        resourcesResponse.setImg(resources.getImg());
+        resourcesResponse.setDescription(resources.getDescription());
+        resourcesResponse.setContent(resources.getContent());
+        resourcesResponse.setResourcesType(resources.getResourcesType());
+        resourcesResponse.setResourcesStatus(resources.getResourcesStatus());
+        resourcesResponse.setReadingTime(resources.getReadingTime());
+        resourcesResponse.setCreatedAt(resources.getCreatedAt());
+        return resourcesResponse;
     }
 
     public Integer calculateReadingTime(String content) {
@@ -50,7 +67,19 @@ public class ResourcesService {
 
     public List<ResourcesResponse> getAllResources() {
         List<Resources> resources = resourcesRepository.findAll();
-        return resources.stream().map(resourcesMapper::toResourcesResponse).toList();
+        return resources.stream().map(resources1 -> {
+            ResourcesResponse resp = new ResourcesResponse();
+            resp.setResourcesID(resources1.getResourcesID());
+            resp.setResourcesName(resources1.getResourcesName());
+            resp.setImg(resources1.getImg());
+            resp.setDescription(resources1.getDescription());
+            resp.setContent(resources1.getContent());
+            resp.setResourcesType(resources1.getResourcesType());
+            resp.setResourcesStatus(resources1.getResourcesStatus());
+            resp.setReadingTime(resources1.getReadingTime());
+            resp.setCreatedAt(resources1.getCreatedAt());
+            return resp;
+        }).toList();
     }
 
     public ResourcesResponse getResourcesById(String resourceId) {
@@ -60,7 +89,19 @@ public class ResourcesService {
 
     public List<ResourcesResponse> getResourcesByStatus(ResourcesStatus resourcesStatus) {
         List<Resources> resources = resourcesRepository.findResourcesByResourcesStatus(resourcesStatus);
-        return resources.stream().map(resourcesMapper::toResourcesResponse).toList();
+        return resources.stream().map(r -> {
+            ResourcesResponse resp = new ResourcesResponse();
+            resp.setResourcesID(r.getResourcesID());
+            resp.setResourcesName(r.getResourcesName());
+            resp.setImg(r.getImg());
+            resp.setDescription(r.getDescription());
+            resp.setContent(r.getContent());
+            resp.setResourcesType(r.getResourcesType());
+            resp.setResourcesStatus(r.getResourcesStatus());
+            resp.setReadingTime(r.getReadingTime());
+            resp.setCreatedAt(r.getCreatedAt());
+            return resp;
+        }).toList();
     }
 
     public ResourcesResponse updateResources(
@@ -79,7 +120,17 @@ public class ResourcesService {
             resources.setResourcesStatus(ResourcesStatus.PENDING);
         }
         resourcesRepository.save(resources);
-        return resourcesMapper.toResourcesResponse(resources);
+        ResourcesResponse response = new ResourcesResponse();
+        response.setResourcesID(resources.getResourcesID());
+        response.setResourcesName(resources.getResourcesName());
+        response.setImg(resources.getImg());
+        response.setDescription(resources.getDescription());
+        response.setContent(resources.getContent());
+        response.setResourcesType(resources.getResourcesType());
+        response.setResourcesStatus(resources.getResourcesStatus());
+        response.setReadingTime(resources.getReadingTime());
+        response.setCreatedAt(resources.getCreatedAt());
+        return response;
     }
 
     public ResourcesResponse deleteResources(String resourceId) {
@@ -87,7 +138,17 @@ public class ResourcesService {
         if (resources != null) {
             resourcesRepository.delete(resources);
         }
-        return resourcesMapper.toResourcesResponse(resources);
+        ResourcesResponse response = new ResourcesResponse();
+        response.setResourcesID(resources.getResourcesID());
+        response.setResourcesName(resources.getResourcesName());
+        response.setImg(resources.getImg());
+        response.setDescription(resources.getDescription());
+        response.setContent(resources.getContent());
+        response.setResourcesType(resources.getResourcesType());
+        response.setResourcesStatus(resources.getResourcesStatus());
+        response.setReadingTime(resources.getReadingTime());
+        response.setCreatedAt(resources.getCreatedAt());
+        return response;
     }
 
     public List<ResourcesResponse> getResourcesByType(ResourcesType type) {
