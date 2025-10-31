@@ -19,6 +19,7 @@ public class ChatMessageController {
     @GetMapping("/history")
     public ApiResponse<List<ChatMessage>> findHistory(
             @RequestParam String userID1,
+
             @RequestParam String userID2){
         return ApiResponse.<List<ChatMessage>>builder()
                 .code(1000)
