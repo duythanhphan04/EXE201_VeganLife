@@ -24,7 +24,6 @@ public class AppointmentController {
   @PostMapping
   @Operation(summary = "Create a new appointment")
   public ApiResponse<AppointmentResponse> createAppointment(
-          
       @Valid @RequestBody CreateAppointmentRequest request) throws IOException {
     AppointmentResponse appointmentResponse = appointmentService.createAppointment(request);
     return ApiResponse.<AppointmentResponse>builder()
