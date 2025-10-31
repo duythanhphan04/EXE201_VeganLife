@@ -45,11 +45,18 @@ public class GoogleConfig {
   @Bean
   public Credential googleCredential(NetHttpTransport httpTransport, JsonFactory jsonFactory)
       throws IOException, GeneralSecurityException {
-    InputStream in = getClass().getResourceAsStream(credentialsFilePath);
-    if (in == null) {
-      throw new IOException("Resource not found: " + credentialsFilePath);
-    }
-    GoogleClientSecrets clientSecrets =
+      InputStream in;
+      File file = new File(credentialsFilePath);
+      if (file.exists()) {
+          in = new java.io.FileInputStream(file);
+      } else {
+          // fallback cho trường hợp chạy trong môi trường dev (classpath)
+          in = getClass().getResourceAsStream(credentialsFilePath);
+          if (in == null) {
+              throw new IOException("Resource not found: " + credentialsFilePath);
+          }
+      }
+      GoogleClientSecrets clientSecrets =
         GoogleClientSecrets.load(jsonFactory, new java.io.InputStreamReader(in));
     GoogleAuthorizationCodeFlow flow =
         new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets, SCOPES)
