@@ -36,3 +36,5 @@ build/
 
 ### MySQL runtime data
 mysql/
+# Cho phép copy file secret khi build Docker
+!application-secret.properties
