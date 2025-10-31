@@ -60,7 +60,7 @@ public class GoogleConfig {
         GoogleClientSecrets.load(jsonFactory, new java.io.InputStreamReader(in));
     GoogleAuthorizationCodeFlow flow =
         new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets, SCOPES)
-            .setDataStoreFactory(new FileDataStoreFactory(new File(tokensDirectoryPath)))
+            .setDataStoreFactory(new FileDataStoreFactory(new File("/app/tokens")))
             .setAccessType("offline")
             .build();
     LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(redirectPort).build();
