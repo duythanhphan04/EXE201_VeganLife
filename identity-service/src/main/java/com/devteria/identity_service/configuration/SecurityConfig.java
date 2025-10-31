@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         // 🔓 Cho phép WebSocket, SockJS, STOMP connect
                         .requestMatchers(
-                                "/chat-websocket/**", "/ws/**", "/topic/**", "/queue/**", "/app/**"
+                                "/chat-websocket/**", "/ws/**", "/topic/**", "/queue/**", "/app/**","/api/auth/**", "/auth/**"
                         ).permitAll()
 
                         // 🔓 Cho phép các request REST cơ bản (nếu bạn muốn)

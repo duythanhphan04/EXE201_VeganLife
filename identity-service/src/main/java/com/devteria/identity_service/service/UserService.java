@@ -53,6 +53,7 @@ public class UserService {
         newUser.setPlan(UserPlan.FREE);
         userRepository.save(newUser);
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserID(newUser.getUserID());
         userResponse.setUsername(newUser.getUsername());
         userResponse.setFullName(newUser.getFullName());
         userResponse.setRole(newUser.getRole());
@@ -74,6 +75,7 @@ public class UserService {
         newUser.setStatus(UserStatus.ACTIVE);
         userRepository.save(newUser);
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserID(newUser.getUserID());
         userResponse.setUsername(newUser.getUsername());
         userResponse.setFullName(newUser.getFullName());
         userResponse.setRole(newUser.getRole());
@@ -83,10 +85,10 @@ public class UserService {
         return userResponse ;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getAllUser() {
         return userRepository.findAll().stream().map(user -> {
             UserResponse userResponse = new UserResponse();
+            userResponse.setUserID(user.getUserID());
             userResponse.setUsername(user.getUsername());
             userResponse.setFullName(user.getFullName());
             userResponse.setEmail(user.getEmail());
@@ -114,6 +116,7 @@ public class UserService {
                         .findById(id)
                         .orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserID(user.getUserID());
         userResponse.setUsername(user.getUsername());
         userResponse.setFullName(user.getFullName());
         userResponse.setEmail(user.getEmail());
@@ -140,6 +143,7 @@ public class UserService {
         user.setImg(request.getImg());
         userRepository.save(user);
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserID(user.getUserID());
         userResponse.setUsername(user.getUsername());
         userResponse.setFullName(user.getFullName());
         userResponse.setEmail(user.getEmail());
@@ -167,6 +171,7 @@ public class UserService {
                 userRepository.findById(id).orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(u);
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserID(u.getUserID());
         userResponse.setUsername(u.getUsername());
         userResponse.setFullName(u.getFullName());
         userResponse.setEmail(u.getEmail());
@@ -187,6 +192,7 @@ public class UserService {
         user.setStatus(status);
         userRepository.save(user);
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserID(user.getUserID());
         userResponse.setUsername(user.getUsername());
         userResponse.setFullName(user.getFullName());
         userResponse.setEmail(user.getEmail());
@@ -209,6 +215,7 @@ public class UserService {
         user.setCoach(coach);
         userRepository.save(user);
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserID(user.getUserID());
         userResponse.setUsername(user.getUsername());
         userResponse.setFullName(user.getFullName());
         userResponse.setEmail(user.getEmail());
@@ -231,6 +238,7 @@ public class UserService {
                         .findByUsername(name)
                         .orElseThrow(() -> new WebException(ErrorCode.USER_NOT_FOUND));
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserID(user.getUserID());
         userResponse.setUsername(user.getUsername());
         userResponse.setFullName(user.getFullName());
         userResponse.setEmail(user.getEmail());
@@ -248,6 +256,7 @@ public class UserService {
     public List<UserResponse> getUserByStatus(UserStatus status) {
         return userRepository.findByStatus(status).stream().map(user -> {
             UserResponse userResponse = new UserResponse();
+            userResponse.setUserID(user.getUserID());
             userResponse.setUsername(user.getUsername());
             userResponse.setFullName(user.getFullName());
             userResponse.setEmail(user.getEmail());
@@ -266,6 +275,7 @@ public class UserService {
     public List<UserResponse> getUserByRole(Role role) {
         return userRepository.findByRole(role).stream().map(user -> {
             UserResponse userResponse = new UserResponse();
+            userResponse.setUserID(user.getUserID());
             userResponse.setUsername(user.getUsername());
             userResponse.setFullName(user.getFullName());
             userResponse.setEmail(user.getEmail());
@@ -285,6 +295,7 @@ public class UserService {
         return userRepository.findByCoachUserID(coachId).stream()
                 .map(user -> {
                     UserResponse userResponse = new UserResponse();
+                    userResponse.setUserID(user.getUserID());
                     userResponse.setUsername(user.getUsername());
                     userResponse.setFullName(user.getFullName());
                     userResponse.setEmail(user.getEmail());
