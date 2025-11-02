@@ -70,7 +70,7 @@ public class UserService {
         User newUser = new User();
         newUser.setUsername(request.getUsername());
         newUser.setFullName(request.getFullName());
-        newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setRole(Role.COACH);
         newUser.setStatus(UserStatus.ACTIVE);
         userRepository.save(newUser);
