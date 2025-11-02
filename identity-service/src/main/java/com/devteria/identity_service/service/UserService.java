@@ -46,6 +46,7 @@ public class UserService {
         User newUser = new User();
         newUser.setUsername(request.getUsername());
         newUser.setFullName(request.getFullName());
+        newUser.setPassword(request.getPassword());
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         newUser.setRole(Role.USER);
         newUser.setStatus(UserStatus.ACTIVE);
@@ -70,9 +71,12 @@ public class UserService {
         User newUser = new User();
         newUser.setUsername(request.getUsername());
         newUser.setFullName(request.getFullName());
-        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setPassword(request.getPassword());
+        newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         newUser.setRole(Role.COACH);
         newUser.setStatus(UserStatus.ACTIVE);
+        newUser.setCreatedAt(Instant.now());
+        newUser.setPlan(UserPlan.FREE);
         userRepository.save(newUser);
         UserResponse userResponse = new UserResponse();
         userResponse.setUserID(newUser.getUserID());
